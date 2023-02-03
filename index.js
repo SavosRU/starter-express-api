@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const fetch     = require("node-fetch")
 
 // ***  DETECT of SERVER's IPs **
 //====================================================================================
@@ -30,7 +31,17 @@ app.all('/', (req, res) => {
     console.log("Just got a request!")
     res.send('Yo!')
 })
-app.all("/ips", async (req, res) => {
-    res.status(200).json(nonLocalInterfaces);
+app.get("/ips", async (req, res) => {
+    const servers = await fetch("https://2ip.ru/");
+    const data = await servers.text();
+    const dataArray = data.split("\n");
+    let myExtIP = "";
+    dataArray.forEach(element => {
+        if(element.includes("return 'IP адрес:")) {
+            myExtIP = element.replace("return 'IP адрес: ", "").replace("\"\\n\"", "").replace("\"\\n\"", "").replace("' +  + copyInfoText + '© 2ip.io' + ", "");
+            console.log("FETCH() => Element:", myExtIP);
+        }
+    });
+    res.status(200).json({serverExternalIP: myExtIP});
 }); 
 app.listen(process.env.PORT || 3000)
