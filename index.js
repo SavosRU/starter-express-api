@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const axios     = require("axios")
 const fetch     = require("node-fetch")
 
 // ***  DETECT of SERVER's IPs **
@@ -31,7 +32,7 @@ app.all('/', (req, res) => {
     console.log("Just got a request!")
     res.send('Yo!')
 })
-app.get("/ips", async (req, res) => {
+app.get("/fetch_ips", async (req, res) => {
     const servers = await fetch("https://2ip.ru/");
     const data = await servers.text();
     const dataArray = data.split("\n");
@@ -42,6 +43,19 @@ app.get("/ips", async (req, res) => {
             console.log("FETCH() => Element:", myExtIP);
         }
     });
-    res.status(200).json({serverExternalIP: myExtIP});
+    res.status(200).json({fetch: true, serverExternalIP: myExtIP});
+}); 
+app.get("/axios_ips", async (req, res) => {
+    const servers = await axios.get("https://2ip.ru/");
+    const data = await servers.data;
+    const dataArray = data.split("\n");
+    let myExtIP = "";
+    dataArray.forEach(element => { 
+        if(element.includes("return 'IP адрес:")) {
+            myExtIP = element.replace("return 'IP адрес: ", "").replace("\"\\n\"", "").replace("\"\\n\"", "").replace("' +  + copyInfoText + '© 2ip.io' + ", "");
+            console.log("AXIOS() => Element:", myExtIP);
+        }
+    });
+    res.status(200).json({axios: true, serverExternalIP: myExtIP});
 }); 
 app.listen(process.env.PORT || 3000)
